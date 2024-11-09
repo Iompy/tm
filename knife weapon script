@@ -1,0 +1,1791 @@
+wait(0.05)
+local camera = game.Workspace.CurrentCamera
+local player = game.Players.LocalPlayer
+repeat wait() until player.Character ~= nil
+local character = player.Character
+repeat wait() until character:findFirstChild("Humanoid") ~= nil
+local humanoid = character:findFirstChild("Humanoid")
+local head = character:findFirstChild("Head")
+local torso = character:findFirstChild("Torso")
+local tool = script.Parent
+local pl_mouse = player:GetMouse()
+
+local knifeType = "Normal"
+local knifePerk = "None"
+
+local rs = game:GetService("RunService")
+
+local charge = 0
+local charging = false
+local rany = 1
+local gun_damage = 25
+local walkspeed = 20
+local cloaked = false
+local cloakDB = false
+local skinLoad = false
+
+local teslaEffect = game.ReplicatedStorage.Local_Character.Knife.Electric:clone() 
+local beepEffect = game.ReplicatedStorage.Local_Character.Knife.Flash:clone() 
+local fireEffect = game.ReplicatedStorage.Local_Character.Knife.Fire:clone() 
+
+Settings = {
+	Equip_time = 0.4,
+	Inspect_speed = 6,
+	Attack_speed = 0.6,
+	Charge_speed = 1.4,
+	Throw_speed = 1,
+}
+
+function tagHumanoid(humanoid)
+	local tag = Instance.new("ObjectValue")
+	tag.Name = "creator"
+	tag.Value = player
+	tag.Parent = humanoid
+end
+
+
+function untagHumanoid(humanoid)
+	if humanoid ~= nil then
+		local tag = humanoid:findFirstChild("creator")
+		if tag ~= nil then
+			tag.Parent = nil
+		end
+	end
+end
+
+
+function GENERATE_IGNORELIST(ray)
+	local result = {character, camera, ray}
+	local plr = game.Players:GetPlayers()
+	for i = 1, #plr do
+		if plr[i] ~= player then
+			local char = plr[i].Character
+			if char ~= nil then
+				local ch = char:GetChildren()
+				for i = 1, #ch do
+					if ch[i]:IsA("Hat") or ch[i]:IsA("Tool") then
+						result[#result + 1] = ch[i]
+					end
+				end
+			end
+		end
+	end
+local plr = camera:GetChildren()
+	for i = 1, #plr do
+		if plr[i] ~= nil then
+				local ch = plr[i]:GetChildren()
+				for i = 1, #ch do
+					if ch[i]:IsA("Part") then
+						result[#result + 1] = ch[i]
+					end
+				
+			end
+		end
+	end	
+
+				local ch = workspace:GetChildren()
+				for i = 1, #ch do
+					if ch ~= nil then
+					if ch.Name == "RAY_CAST" then
+						result[#result + 1] = ch[i]
+					end
+					end
+					
+	end		
+	return result
+end
+
+function GENERATE_IGNORELIST2(ray)
+	local result = {character, camera, ray}
+	local plr = game.Players:GetPlayers()
+	for i = 1, #plr do
+		if plr[i] ~= player then
+			local char = plr[i].Character
+			if char ~= nil then
+				local ch = char:GetChildren()
+				for i = 1, #ch do
+					if ch[i]:IsA("Hat") or ch[i]:IsA("Tool") then
+						result[#result + 1] = ch[i]
+					end
+				end
+			end
+		end
+	end
+local plr = camera:GetChildren()
+	for i = 1, #plr do
+		if plr[i] ~= nil then
+				local ch = plr[i]:GetChildren()
+				for i = 1, #ch do
+					if ch[i]:IsA("Part") then
+						result[#result + 1] = ch[i]
+					end
+				
+			end
+		end
+	end	
+local plr = game.Players:GetChildren()
+	for i = 1, #plr do
+		if plr[i] ~= nil then
+			if plr[i].Character ~= nil then
+				result[#result + 1] = plr[i].Character
+				
+			end
+		end
+	end		
+
+				local ch = workspace:GetChildren()
+				for i = 1, #ch do
+					if ch ~= nil then
+					if ch.Name == "RAY_CAST" then
+						result[#result + 1] = ch[i]
+					end
+					end
+					
+	end		
+	return result
+end
+
+_G.AnimType = "Default"
+_G.AnimState = 1
+
+function Animate(tp, st)
+	_G.AnimType = tp
+	_G.AnimState = st
+end
+
+local flash = nil 
+
+tool.Selected:connect(function(mouse)
+	if humanoid.Health <= 0 then return end
+	pl_mouse.Icon = "http://www.roblox.com/asset/?id=117431027"
+	repeat wait() until character:findFirstChild("WeaponObject") ~= nil
+	local handle = character:findFirstChild("WeaponObject")
+	
+	local data = player:findFirstChild("DATA")	
+	if data then
+		if data.KnifeSkins.Value ~= nil then
+		handle.Mesh.TextureId = data.KnifeSkins.Value.Handle.Mesh.TextureId 
+			if camera:findFirstChild("WeaponAnimation") then
+				if camera.WeaponAnimation:findFirstChild("WeaponObject") then
+				camera.WeaponAnimation:findFirstChild("WeaponObject").Mesh.TextureId = data.KnifeSkins.Value.Handle.Mesh.TextureId 	
+				end
+			end
+		end
+		if character:findFirstChild("ReaperHat") then
+		knifePerk = "Shadow Cloak"		
+		else	
+			if data.Perks.Value ~= nil then
+				if data.Perks.Value.Name == "Quick Hands" then
+				knifePerk = "Quick Hands"	
+				elseif data.Perks.Value.Name == "Shadow Cloak" then
+				knifePerk = "Shadow Cloak"	 
+				end
+			end
+		end
+		if data.Abilities.Value ~= nil then
+			if data.Abilities.Value.Name == "Laser Knife" then
+			knifeType = "Laser Knife"	
+			elseif data.Abilities.Value.Name == "Boom Blade" then
+			knifeType = "Boom Blade"	
+			elseif data.Abilities.Value.Name == "MLG Money" then
+			knifeType = "MLG Money"	
+			elseif data.Abilities.Value.Name == "Midas Touch" then
+			knifeType = "Midas Touch"
+			elseif data.Abilities.Value.Name == "HOT! Knife" then
+			knifeType = "HOT! Knife"	
+			elseif data.Abilities.Value.Name == "Ghost Knife" then
+			knifeType = "Ghost Knife"	
+			elseif data.Abilities.Value.Name == "Tesla Knife" then
+			knifeType = "Tesla Knife"	
+			elseif data.Abilities.Value.Name == "Quickscoper" then
+			knifeType = "Quickscoper"																					
+			end
+		end
+	end
+	if character then
+		if workspace.GameInProgress.Mode.Value ~= "Infected" then
+		character.Humanoid.WalkSpeed = 20		
+			if workspace.GameInProgress.Mode.Value == "Cold Killer" then
+			character.Humanoid.WalkSpeed = 25	
+			else	
+				if data then
+					if data.Perks.Value ~= nil then
+						if data.Perks.Value.Name == "Speedy Gonzales" then	
+						character.Humanoid.WalkSpeed = 25
+						else
+						character.Humanoid.WalkSpeed = 20				
+						end
+					end
+				end	
+			end
+		else
+		character.Humanoid.WalkSpeed = 13		
+		end	
+	end	
+	
+	if handle:findFirstChild("Death1") == nil then
+	local slash1_sound = Instance.new("Sound", handle)
+	slash1_sound.SoundId = "http://www.roblox.com/asset/?id=153647529"
+	slash1_sound.Volume = 1
+	
+	local slash2_sound = Instance.new("Sound", handle)
+	slash2_sound.SoundId = "http://www.roblox.com/asset/?id=153647534"
+	slash2_sound.Volume = 1
+	
+	local slash3_sound = Instance.new("Sound", handle)
+	slash3_sound.SoundId = "http://www.roblox.com/asset/?id=153647539"
+	slash3_sound.Volume = 1	
+
+	local slash4_sound = Instance.new("Sound", handle)
+	slash4_sound.SoundId = "http://www.roblox.com/asset/?id=153647540"
+	slash4_sound.Volume = 1
+	
+	local equip_sound = Instance.new("Sound", handle) 
+	equip_sound.SoundId = "http://www.roblox.com/asset/?id=169310310"
+	equip_sound.Volume = 1	
+	
+	local hit1_sound = Instance.new("Sound", handle) 
+	hit1_sound.SoundId = "http://www.roblox.com/asset/?id=153647526"
+	hit1_sound.Name = "Hit1"
+	hit1_sound.Volume = 1	
+	
+	local hit2_sound = Instance.new("Sound", handle) 
+	hit2_sound.SoundId = "http://www.roblox.com/asset/?id=153647522"
+	hit2_sound.Name = "Hit2"
+	hit2_sound.Volume = 1	
+	
+	local hit3_sound = Instance.new("Sound", handle) 
+	hit3_sound.SoundId = "http://www.roblox.com/asset/?id=153647519"
+	hit3_sound.Name = "Hit3"
+	hit3_sound.Volume = 1	
+	
+	local death1_sound = Instance.new("Sound", handle) 
+	death1_sound.SoundId = "http://www.roblox.com/asset/?id=146457047"
+	death1_sound.Name = "Death1"
+	death1_sound.Volume = 1	
+	
+	local death2_sound = Instance.new("Sound", handle) 
+	death2_sound.SoundId = "http://www.roblox.com/asset/?id=146594640"
+	death2_sound.Name = "Death2"
+	death2_sound.Volume = 1	
+	
+	local death3_sound = Instance.new("Sound", handle) 
+	death3_sound.SoundId = "http://www.roblox.com/asset/?id=146594648"
+	death3_sound.Name = "Death3"	
+	death3_sound.Volume = 1		
+	
+	local airswoosh_sound = Instance.new("Sound", handle) 
+	airswoosh_sound.SoundId = "http://www.roblox.com/asset/?id=146470466"	
+	airswoosh_sound.Name = "airswoosh"
+	airswoosh_sound.Volume = 1	
+		
+	local throw1_sound = Instance.new("Sound", handle) 
+	throw1_sound.SoundId = "http://www.roblox.com/asset/?id=153647549"	
+	throw1_sound.Volume = 1	
+	
+	local throw2_sound = Instance.new("Sound", handle) 
+	throw2_sound.SoundId = "http://www.roblox.com/asset/?id=153647554"	
+	throw2_sound.Volume = 1	
+		
+	local wallhit1_sound = Instance.new("Sound", handle) 
+	wallhit1_sound.SoundId = "http://www.roblox.com/asset/?id=153647564"	
+	wallhit1_sound.Name = "Wallhit1"
+	wallhit1_sound.Volume = 1	
+	
+	local wallhit2_sound = Instance.new("Sound", handle) 
+	wallhit2_sound.SoundId = "http://www.roblox.com/asset/?id=153647563"	
+	wallhit2_sound.Name = "Wallhit2"
+	wallhit2_sound.Volume = 1	
+	
+	local scream_sound = Instance.new("Sound", handle) 
+	scream_sound.SoundId = "http://www.roblox.com/asset/?id=138097458"	
+	scream_sound.Volume = 1		
+	
+	local noscope_sound = Instance.new("Sound", handle) 
+	noscope_sound.SoundId = "http://www.roblox.com/asset/?id=170038933"	
+	noscope_sound.Volume = 1	
+
+	local laser_sound = Instance.new("Sound", handle) 
+	laser_sound.SoundId = "http://www.roblox.com/asset/?id=156572165"	
+	laser_sound.Volume = 1		
+	
+	local boom_sound = Instance.new("Sound", handle) 
+	boom_sound.SoundId = "http://www.roblox.com/asset/?id=141679994"	
+	boom_sound.Volume = 1		
+	
+	local horn_sound = Instance.new("Sound", handle) 
+	horn_sound.SoundId = "http://www.roblox.com/asset/?id=170037553"	
+	horn_sound.Volume = 1	
+	
+	local cloaks = Instance.new("Sound", handle) 
+	cloaks.SoundId = "http://www.roblox.com/asset/?id=131979248"	
+	cloaks.Volume = 1		
+	
+	local uncloaks = Instance.new("Sound", handle) 
+	uncloaks.SoundId = "http://www.roblox.com/asset/?id=131979252"	
+	uncloaks.Volume = 1	
+	
+	local money = Instance.new("Sound", handle) 
+	money.SoundId = "http://www.roblox.com/asset/?id=131886985"	
+	money.Volume = 1	
+	money.Name = "Money"
+
+	local goldify = Instance.new("Sound", handle) 
+	goldify.SoundId = "http://www.roblox.com/asset/?id=156283117"	
+	goldify.Volume = 1	
+	goldify.Name = "GoldTransform"
+	
+	local burn = Instance.new("Sound", handle) 
+	burn.SoundId = "http://www.roblox.com/asset/?id=177045481"	
+	burn.Volume = 1		
+	burn.Name = "Burn"		
+	
+	local zap1 = Instance.new("Sound", handle) 
+	zap1.SoundId = "http://www.roblox.com/asset/?id=157325701"	
+	zap1.Volume = 1		
+	zap1.Name = "Zap1"	
+	
+	local zap2 = Instance.new("Sound", handle) 
+	zap2.SoundId = "http://www.roblox.com/asset/?id=148227816"	
+	zap2.Volume = 1		
+	zap2.Name = "Zap2"	
+	
+	local zap3 = Instance.new("Sound", handle) 
+	zap3.SoundId = "http://www.roblox.com/asset/?id=139699637"	
+	zap3.Volume = 1		
+	zap3.Name = "ZapCharge"	
+	
+	local zap4 = Instance.new("Sound", handle) 
+	zap4.SoundId = "http://www.roblox.com/asset/?id=189531243"	
+	zap4.Volume = 1		
+	zap4.Name = "ZapEnd"	
+	
+	local beep = Instance.new("Sound", handle) 
+	beep.SoundId = "http://www.roblox.com/asset/?id=104560954"	
+	beep.Volume = 1		
+	beep.Name = "Beep"	
+	
+	local explode = Instance.new("Sound", handle) 
+	explode.SoundId = "http://www.roblox.com/asset/?id=157043576"	
+	explode.Volume = 1		
+	explode.Name = "Explode"
+	
+	local hitmarker = Instance.new("Sound", handle) 
+	hitmarker.SoundId = "http://www.roblox.com/asset/?id=160432334"	
+	hitmarker.Volume = 1		
+	hitmarker.Name = "HitMarker"	
+	
+	local shoot = Instance.new("Sound", handle) 
+	shoot.SoundId = "http://www.roblox.com/asset/?id=193444173"	
+	shoot.Volume = 1		
+	shoot.Name = "Shoot"	
+	
+	local omg = Instance.new("Sound", handle) 
+	omg.SoundId = "http://www.roblox.com/asset/?id=241084057"	
+	omg.Volume = 1		
+	omg.Name = "OMG"		
+	
+	local wow = Instance.new("Sound", handle) 
+	wow.SoundId = "http://www.roblox.com/asset/?id=168209314"	
+	wow.Volume = 1		
+	wow.Name = "Wow"	
+	
+	local wombo = Instance.new("Sound", handle) 
+	wombo.SoundId = "http://www.roblox.com/asset/?id=224360362"	
+	wombo.Volume = 1		
+	wombo.Name = "Wombo"	
+	
+	local airhorns = Instance.new("Sound", handle) 
+	airhorns.SoundId = "http://www.roblox.com/asset/?id=199837759"	
+	airhorns.Volume = 1		
+	airhorns.Name = "Airhorns"				
+	end									
+				
+	if knifePerk == "Quick Hands" then
+	Settings.Charge_speed = 0.9	
+	end
+	
+	handle.Transparency = 0				
+	
+	Animate("Equip", 0)
+	
+	--humanoid.WalkSpeed = walkspeed
+	mouse.Icon = ""
+	equip_sound:Play()
+	
+	local anim_equip = 1
+	local last_action = tick()
+	
+	local attack_perform = 0
+	local inspect_perform = 0
+	local charge_perform = 0
+	local throw_perform = 0
+	
+	local running = true
+	local last_c = tick()
+	
+	local click_start = tick()
+	
+	
+local rarm = character:findFirstChild("Right Arm")
+local db = false
+
+function unCloak()
+	coroutine.resume(coroutine.create(function() 
+	if cloaked then
+	cloaked = false	
+	if handle ~= nil then uncloaks:Play() end	
+		if camera:findFirstChild("WeaponAnimation") ~= nil then
+			if camera.WeaponAnimation:findFirstChild("Larm") ~= nil then
+			camera.WeaponAnimation:findFirstChild("Larm").Transparency = 0
+			end
+			if camera.WeaponAnimation:findFirstChild("Rarm") ~= nil then
+			camera.WeaponAnimation:findFirstChild("Rarm").Transparency = 0
+			end		
+			if camera.WeaponAnimation:findFirstChild("WeaponObject") ~= nil then
+			camera.WeaponAnimation:findFirstChild("WeaponObject").Transparency = 0
+			end					
+		end		
+	local p = character:GetChildren()
+	local parts = {}
+	for i = 1, #p do
+		if p[i] ~= nil then
+			if p[i].Name == "GhostdeeriTheCursed" then
+				if p[i]:findFirstChild("Handle") then
+					if p[i].Handle:findFirstChild("Fire") then
+					p[i].Handle:findFirstChild("Fire").Enabled = true	
+					end
+				end
+			end
+			if p[i].Name == "Pet" then
+				if p[i]:findFirstChild("Fire") then
+				p[i]:findFirstChild("Fire").Enabled = true
+				end
+				if p[i]:findFirstChild("BillboardGui") then
+				p[i]:findFirstChild("BillboardGui").Enabled = true
+				end					
+				if p[i]:findFirstChild("Sparkles") then
+				p[i]:findFirstChild("Sparkles").Enabled = true
+				end				
+			end			
+			if p[i].Name == "Head" then
+				if p[i]:findFirstChild("face") and faceId then
+				p[i]:findFirstChild("face").Texture = faceId
+				end				
+			end
+			if p[i].className == "Model" then
+				if p[i]:findFirstChild("Head") then
+					if faceId2 then
+					p[i].Head:findFirstChild("face").Texture = faceId2	
+					end
+				table.insert(parts, p[i].Head)	
+				end
+			end
+			if p[i].className == "Part" and p[i].Name ~= "HumanoidRootPart" then
+			table.insert(parts, p[i])
+			elseif p[i].className == "Hat" then
+				if p[i]:findFirstChild("Handle") then
+				table.insert(parts, p[i]:findFirstChild("Handle"))	
+				end
+			end
+		end
+	end
+	for x = 1, 10 do
+		wait(0.1)
+		for i = 1, #parts do
+			if parts[i] ~= nil then
+			parts[i].Transparency = parts[i].Transparency - 0.1	
+			end
+		end
+	end	
+	wait(15)
+	cloakDB = false	
+	end
+	end))
+end
+
+function cloak()
+	if workspace.GameInProgress.Mode.Value == "Infected" then return end
+	coroutine.resume(coroutine.create(function() 
+	cloakDB = true
+	cloaked = true
+	cloaks:Play()	
+	local p = character:GetChildren()
+	local parts = {}
+		if camera:findFirstChild("WeaponAnimation") ~= nil then
+			if camera.WeaponAnimation:findFirstChild("Larm") ~= nil then
+			camera.WeaponAnimation:findFirstChild("Larm").Transparency = 0.5
+			end
+			if camera.WeaponAnimation:findFirstChild("Rarm") ~= nil then
+			camera.WeaponAnimation:findFirstChild("Rarm").Transparency = 0.5
+			end		
+			if camera.WeaponAnimation:findFirstChild("WeaponObject") ~= nil then
+			camera.WeaponAnimation:findFirstChild("WeaponObject").Transparency = 0.5
+			end					
+		end		
+	for i = 1, #p do
+		if p[i] ~= nil then
+			if p[i].Name == "GhostdeeriTheCursed" then
+				if p[i]:findFirstChild("Handle") then
+					if p[i].Handle:findFirstChild("Fire") then
+					p[i].Handle:findFirstChild("Fire").Enabled = false	
+					end
+				end
+			end			
+			if p[i].Name == "Pet" then
+				if p[i]:findFirstChild("Fire") then
+				p[i]:findFirstChild("Fire").Enabled = false	
+				end
+				if p[i]:findFirstChild("BillboardGui") then
+				p[i]:findFirstChild("BillboardGui").Enabled = false	
+				end				
+				if p[i]:findFirstChild("Sparkles") then
+				p[i]:findFirstChild("Sparkles").Enabled = false	
+				end				
+			end
+			if p[i].Name == "Head" and script.Parent.Parent.Parent.Character:findFirstChild("Namer") == nil then
+				if p[i]:findFirstChild("face") then
+				faceId = p[i]:findFirstChild("face").Texture
+				p[i]:findFirstChild("face").Texture = ""
+				end				
+			end
+			if p[i].className == "Model" then
+				if p[i]:findFirstChild("Head") then
+				faceId2 = p[i].Head:findFirstChild("face").Texture	
+				p[i].Head:findFirstChild("face").Texture = ""
+				table.insert(parts, p[i].Head)	
+				end
+			end			
+			if p[i].className == "Part" and p[i].Name ~= "HumanoidRootPart" then
+			table.insert(parts, p[i])
+			elseif p[i].className == "Hat" then
+				if p[i]:findFirstChild("Handle") then
+				table.insert(parts, p[i]:findFirstChild("Handle"))	
+				end
+			end
+		end
+	end
+	for x = 1, 10 do
+		wait(0.1)
+		for i = 1, #parts do
+			if parts[i] ~= nil then
+			parts[i].Transparency = parts[i].Transparency + 0.1 	
+			end
+		end
+	end	
+	wait(10)
+	unCloak()
+	end))
+end
+
+local function checkKnifeEffects(h, han)
+	if h ~= nil then
+		if knifeType == "Midas Touch" then
+			if h.Parent:findFirstChild("Shirt") then
+			h.Parent:findFirstChild("Shirt").Parent = nil	
+			end
+			if h.Parent:findFirstChild("Pants") then
+			h.Parent:findFirstChild("Pants").Parent = nil	
+			end		
+			han.GoldTransform:play()
+			local c = h.Parent:GetChildren()
+			for i = 1, #c do
+				if c[i] ~= nil then
+					if c[i].className == "Part" then
+						c[i].Reflectance = 0.5
+						c[i].BrickColor = BrickColor.new("New Yeller")
+					end
+				end
+			end				
+		elseif knifeType == "HOT! Knife" then
+			if h.Parent:findFirstChild("Shirt") then
+				h.Parent:findFirstChild("Shirt").Parent = nil	
+				end
+				if h.Parent:findFirstChild("Pants") then
+				h.Parent:findFirstChild("Pants").Parent = nil	
+				end		
+				han.Burn:play()
+				local f = Instance.new("Fire")
+				f.Parent = h.Parent.Torso
+				local c = h.Parent:GetChildren()
+				for i = 1, #c do
+				if c[i] ~= nil then
+					if c[i].className == "Part" then
+						c[i].Reflectance = 0
+						c[i].BrickColor = BrickColor.new("Black")
+						end
+					end
+				end				
+		elseif knifeType == "MLG Money"	then
+		han.Money:play()	
+	--	han.Anchored = true
+		--han.Transparency = 1
+		--coroutine.resume(coroutine.create(function()
+			for i = 1, math.random(5, 10) do
+			local buck = Instance.new("Part")
+			buck.formFactor = 2
+			buck.Size = Vector3.new(2,.4,1)
+			buck.BrickColor = BrickColor.new(28)
+			buck.TopSurface = 0
+			buck.BottomSurface = 0
+			buck.Elasticity = .01 
+			buck.Parent = workspace
+			game:GetService("Debris"):AddItem(buck, 3)
+			local s = script.clean:Clone()
+			s.Parent = buck
+			s.Disabled = false
+			if h ~= nil then
+				if h.Parent ~= nil then
+					local v = Vector3.new(math.random() - .5, math.random() - .5, math.random() - .5).unit
+					buck.CFrame = CFrame.new(h.Parent.Torso.Position + (v * 2) + Vector3.new(0,0,0), v)
+				end
+			end
+			local d = Instance.new("Decal")
+			d.Face = 4
+			d.Texture = "http://www.roblox.com/asset/?id=16658163"
+			d.Parent = buck	
+			end		
+		end	
+	end
+end
+
+segmentlength=2
+varience=0.5
+timetofade=.5
+
+function raycast(spos,vec,currentdist, sp)
+	local hit2,pos2=game.Workspace:FindPartOnRay(Ray.new(spos+(vec*.01),vec*currentdist),sp)
+	if hit2~=nil and pos2 then
+		if hit2.Transparency>=.5 or hit2.Name=="Handle" then
+			local currentdist=currentdist-(pos2-spos).magnitude
+			return raycast(pos2,vec,currentdist)
+		end
+	end
+	return hit2,pos2
+end
+
+function zap(targetpos, targetp, sp)
+	if targetpos then
+		local s1, s2, s3, s4, s5 = game.ReplicatedStorage.Local_Character.Knife.S1:clone(),game.ReplicatedStorage.Local_Character.Knife.S2:clone(),game.ReplicatedStorage.Local_Character.Knife.S3:clone(),game.ReplicatedStorage.Local_Character.Knife.S4:clone(),game.ReplicatedStorage.Local_Character.Knife.S5:clone() 
+		local m=Instance.new("Model")
+		m.Name="Lightning"
+		local lastpos=sp.Position
+		local totalsegments=math.ceil(10/segmentlength)
+		local direction=(targetpos-sp.Position).unit
+		local struck=false
+		for i=1,totalsegments do
+			if not struck then
+				local entropy=Vector3.new(varience*((math.random()*3)-1),varience*((math.random()*3)-1),varience*((math.random()*3)-1))
+				local newpos=sp.Position+(direction*(30*(i/totalsegments)))+entropy
+				local hit,endpos=raycast(lastpos,(newpos-lastpos).unit,(lastpos-newpos).magnitude, sp)
+				local l=Instance.new("Part")
+				l.Transparency = 0.5
+				l.CanCollide=false
+				l.Anchored=true
+				l.BrickColor=BrickColor.new("Bright yellow")
+				l.formFactor="Custom"
+				l.Size=Vector3.new(.2,.2,.2)
+				l.CFrame=CFrame.new(lastpos,endpos)*CFrame.Angles(math.pi/2,0,0)*CFrame.new(0,-(lastpos-endpos).magnitude/2,0)
+				local mesh=Instance.new("BlockMesh")
+				mesh.Scale=Vector3.new(.35,(lastpos-endpos).magnitude,.35)*5
+				mesh.Parent=l
+				delay(0.1,function()
+					for i=1,timetofade/(.1) do
+						wait(.1)
+						l.Transparency=i/(timetofade/(.1))
+					end
+				end)
+				l.Parent=m
+				if hit and hit.Parent~=nil then
+					struck=true
+				end
+				if targetp ~= nil then
+					if targetp:findFirstChild("Humanoid") ~= nil then
+						if targetp:findFirstChild("Humanoid").Health > 0 and targetp:findFirstChild("ForceField") == nil then
+								local h = targetp:findFirstChild("Humanoid")
+								local no = false
+						 		if h then
+									if h.Parent ~= character and h.Health > 0 then
+										if workspace.GameInProgress.Mode.Value == "Double Trouble" or workspace.GameInProgress.Mode.Value == "Sticks and Stones" or workspace.GameInProgress.Mode.Value == "Infected" then if h.Parent:findFirstChild("Role") then if h.Parent:findFirstChild("Role").Value == "Murderer" then db = false return end end end	
+										
+										if workspace.GameInProgress.Mode.Value == "Cold Killer" then									
+										freeze(h.Parent)
+										else	
+											if not no then
+											tagHumanoid(h)
+											sp.Zap1:Play()
+											h:TakeDamage(200)
+											local c = targetp:GetChildren() for i = 1, #c do if c[i] ~= nil then if c[i].className == "CharacterMesh" then c[i].Parent = nil end end end	
+											s1.Parent = targetp
+											s2.Parent = targetp
+											s3.Parent = targetp
+											s4.Parent = targetp
+											s5.Parent = targetp
+											end
+											
+										end		
+									--wait(2)
+									--untagHumanoid(h)								
+									end	
+						    	end
+						end
+					end
+				end			
+			lastpos=endpos
+			end
+		end
+		m.Parent=game.Workspace
+		game:GetService("Debris"):AddItem(m,0.1)
+		script.clean:Clone().Parent = m
+	end
+end
+
+function populatehumanoids(mdl)
+	local hh = {}
+	for i2,mdl2 in ipairs(mdl:GetChildren()) do
+		local h = mdl2:findFirstChild("Humanoid")
+		if h ~= nil then
+			table.insert(hh,h)
+		end
+	end
+	return hh
+end
+
+
+local function tesla(sp)	
+	for i = 1, 5 do
+	wait()	
+			num = 0
+			
+			closestpos=nil
+			closestdist=18
+			
+			local humanoids=populatehumanoids(workspace)
+			for i,h in ipairs(humanoids) do
+				if h and h.Parent~=nil then
+					local t=h.Parent:FindFirstChild("Torso")
+					if t and t.Parent ~= character then
+						local dist=(t.Position-sp.Position).magnitude
+						if dist<=closestdist then
+						num = num + 1	
+						sp.Zap1:Play()
+						zap(t.Position, t.Parent, sp)
+						end
+					end
+				end
+			end
+	end	
+	if num == 0 then
+	sp.ZapEnd:Play()	
+	end	
+end
+
+
+function HIT_HANDLE(hit)
+	if db then return end
+	if hit == nil then return end
+	local h = hit.Parent:findFirstChild("Humanoid")
+	if h == nil then
+		h = hit.Parent.Parent:findFirstChild("Humanoid")
+	end
+	if h == nil then return end
+	if handle.Transparency == 1 then return end
+	local head = h.Parent:findFirstChild("Head")
+	if head == nil then return end
+	
+	local s = math.random(1, 3)
+	if s == 1 then
+	hit1_sound:Play()		
+	elseif s == 2 then
+	hit2_sound:Play()			
+	elseif s == 3 then
+	hit3_sound:Play()					
+	end	
+	coroutine.resume(coroutine.create(function()				
+		for i = 1, 5 do		
+		local d = Instance.new("Part")
+		d.BrickColor = BrickColor.new("Bright red")
+		d.Parent = workspace
+		d.Size = Vector3.new(1,1,1)
+		d.TopSurface = "Smooth"
+		d.BottomSurface = "Smooth"
+		local m = Instance.new("BlockMesh")
+		m.Parent = d
+		m.Scale = Vector3.new(0.25,0.25,0.25)
+		game:GetService("Debris"):AddItem(d, 2)
+		local dir = CFrame.new(math.random(-1, 1)*0.25, math.random(-1, 1)*0.25, math.random(-1, 1)*0.25) --* CFrame.Angles(math.rad(-45, 45),math.rad(-45, 45),math.rad(-45, 45))
+		d.Velocity = Vector3.new(math.random(-5, 5), math.random(1, 15), math.random(-5, 5))
+		d.CFrame = handle.CFrame * dir
+		d.CanCollide = false
+		d.Anchored = false
+			coroutine.resume(coroutine.create(function()
+			wait(0.15)
+			d.CanCollide = false
+				for i = 1, 20 do
+				wait()					
+				d.Transparency = d.Transparency + 0.05
+				end
+			end))
+			end
+	end	))		
+	if workspace.GameInProgress.Mode.Value == "Double Trouble" or workspace.GameInProgress.Mode.Value == "Sticks and Stones" or workspace.GameInProgress.Mode.Value == "Infected" then if h.Parent:findFirstChild("Role") then if h.Parent:findFirstChild("Role").Value == "Murderer" then db = false return end end end	
+	if workspace.GameInProgress.Mode.Value == "Cold Killer" then
+	freeze(h.Parent)	
+	else
+	tagHumanoid(h)
+		if h.Health >= 1 then
+			local s = math.random(1, 3)
+			if s == 1 then		
+			death1_sound:Play()	
+			elseif s == 2 then
+			death2_sound:Play()		
+			elseif s == 3 then	
+			death3_sound:Play()				
+			end		
+			h:TakeDamage(1000)
+			if workspace.GameInProgress.Mode.Value == "One In The Chamber" then
+				if handle.Parent:findFirstChild("Bullet") then
+				handle.Parent.Bullet.Value = true
+				end
+			end
+			checkKnifeEffects(h, handle)
+		end
+	end
+
+wait(0.75)
+db = false
+end
+	local down = false
+	mouse.Button1Down:connect(function()
+		down = true
+		while down do
+		wait()	
+		if down then
+		if not running or anim_equip > 0 or humanoid.Health <= 0 or workspace.GameInProgress.Mode.Value == "Infected" or workspace.GameInProgress.Mode.Value == "One In The Chamber" then 
+		else
+			if tick() - attack_perform <= Settings.Attack_speed then 
+			else
+				if tick() - charge_perform <= Settings.Charge_speed then 
+					else
+	if humanoid.Health <= 0 then break end	
+			--coroutine.resume(coroutine.create(function()
+			--wait()
+			if charge < 50 then
+			charge = 0
+			charging = true
+			charge_perform = tick()
+			last_action = tick()			
+			end
+				while charging and down do
+				wait()
+					if charge >= 50 then
+					charge = 50
+					charging = false
+					else
+						if knifePerk == "Quick Hands" then
+						charge = charge + 2	
+						else
+						charge = charge + 1.3			
+						end
+					end	
+				end
+			--end))
+		end					
+				end		
+			end			
+		else
+
+			charge = 0
+			charging = false
+		break	
+		end
+	--	if tick() - attack_perform <= Settings.Attack_speed then return end	
+		--if tick() - charge_perform <= Settings.Charge_speed then return end
+		end
+	end)
+	
+function stick(x, y)
+	local weld = Instance.new("Weld") 
+	weld.Part0 = x
+	weld.Part1 = y
+	local HitPos = x.Position
+	local CJ = CFrame.new(HitPos) 
+	local C0 = x.CFrame:inverse() *CJ 
+	local C1 = y.CFrame:inverse() * CJ 
+	weld.C0 = C0 
+	weld.C1 = C1 
+	weld.Parent = x
+end
+	
+local ice = game.ReplicatedStorage.Local_Character.Ice:clone()	
+function freeze(plr)
+	local role = plr:findFirstChild("Role")
+	if role ~= nil then
+		if role.Value == "Innocent" and plr:findFirstChild("Ice") == nil then	
+		local s = math.random(1, 3)	
+		local newIce = ice:clone()	
+		if plr ~= nil then
+			if plr:findFirstChild("Humanoid") then
+				plr.Humanoid.PlatformStand = true
+				newIce.Parent = plr
+				newIce.Freeze:Play()
+				role.Value = "Frozen"					
+				--plr.Humanoid.PlatformStand = true
+				plr.Humanoid.WalkSpeed = 0
+				newIce.CFrame = plr.Torso.CFrame
+				stick(plr.Torso, newIce)
+				wait(0.05)
+				for a, obj in pairs(plr:children()) do 
+					if obj:IsA("BasePart") then obj.Anchored = true 
+					end 
+				end
+				wait(0.05)
+				newIce.BrickColor = BrickColor.new("Toothpaste")
+				wait()
+				newIce.BrickColor = BrickColor.new("Bright blue")
+			end
+		end		
+		coroutine.resume(coroutine.create(function()
+			local victim = plr
+			wait(20)
+			if victim == nil then return end
+			newIce.BrickColor = BrickColor.new("Toothpaste")
+			newIce.Touched:connect(function(hit)
+				if hit ~= nil then
+					if hit.Parent ~= nil then
+						if hit.Parent:findFirstChild("Role") then
+							if hit.Parent:findFirstChild("Role").Value == "Innocent" or hit.Parent:findFirstChild("Role").Value == "Sheriff" then
+								if victim ~= nil then 
+									if victim:findFirstChild("Humanoid") then
+										coroutine.resume(coroutine.create(function()				
+											for a, obj in pairs(victim:children()) do 
+												if obj:IsA("BasePart") then obj.Anchored = false
+												end 	
+												newIce.Parent = nil								
+												victim.Humanoid.WalkSpeed = 16
+												victim.Humanoid.PlatformStand = false
+												local role = victim:findFirstChild("Role")
+												if role ~= nil then
+												role.Value = "Innocent"	
+												end	
+											end
+										end))
+									end
+								end								
+							end
+						end
+					end
+				end	
+			end)	
+		end))
+	end
+	end				
+end	
+	
+	mouse.Button1Up:connect(function()
+		down = false
+		if humanoid.Health <= 0 then return end
+		if not running or anim_equip > 0 or humanoid.Health <= 0 or player.Character == nil or throwing then return end
+		if tick() - attack_perform <= Settings.Attack_speed then return end
+		unCloak()
+		charging = false
+		throwequip = false
+		--charge = 0
+		attack_perform = tick()
+		throw_perform = tick()
+		last_action = tick()
+		
+		if charge >= 40 then
+		throwing = true
+		handle.Transparency = 1
+			if camera:findFirstChild("WeaponAnimation") then
+				if camera.WeaponAnimation:findFirstChild("WeaponObject") then
+				camera.WeaponAnimation:findFirstChild("WeaponObject").Transparency = 1	
+				end
+			end	
+			local Ray = Ray.new(rarm.CFrame.p,(mouse.Hit.p - rarm.CFrame.p).unit * 300)
+				local RayPart = Instance.new("Part", workspace)	
+				local Hit, Position = game.Workspace:FindPartOnRayWithIgnoreList(Ray, GENERATE_IGNORELIST2(RayPart))	
+				RayPart.Name = "RAY_CAST"
+				RayPart.BrickColor = BrickColor.new("Really red")
+				if knifeType == "Laser Knife" or knifeType == "Quickscoper" then
+				RayPart.Transparency = 0.25	
+				else
+				RayPart.Transparency = 1
+				end
+				RayPart.Anchored = true
+				RayPart.CanCollide = false
+				RayPart.TopSurface = Enum.SurfaceType.Smooth
+				RayPart.BottomSurface = Enum.SurfaceType.Smooth
+				RayPart.formFactor = Enum.FormFactor.Custom
+				game:GetService("Debris"):AddItem(RayPart, 0.5)
+				local tScript = script.clean:clone()
+				tScript.Parent = RayPart
+				tScript.Disabled = false				
+				local m = Instance.new("BlockMesh")
+				m.Parent = RayPart
+				local Distance = (Position - rarm.CFrame.p).magnitude
+				RayPart.Size = Vector3.new(0.25, 0.25, Distance)											    ---------------------------- KNIFE TYPES ------------------------------
+				RayPart.CFrame = CFrame.new(Position, rarm.CFrame.p) * CFrame.new(0, 0, (-Distance/2) + 2)		-----------------------------------------------------------------------
+				if knifeType == "Normal" or knifeType == "Tesla Knife" or knifeType == "Boom Blade" or knifeType == "Ghost Knife" or knifeType == "MLG Money" or knifeType == "HOT! Knife" or knifeType == "Midas Touch" then
+					local tKnife = handle:clone()																-----------------------------------------------------------------------
+					tKnife.Weld:Destroy()																		-----------------------------------------------------------------------
+					tKnife.Parent = workspace
+					tKnife.Anchored = true
+					tKnife.Transparency = 0	
+					
+					if knifeType == "Ghost Knife" then tKnife.Transparency = 0.5 end
+					if knifeType == "HOT! Knife" then
+					handle.Fire.Enabled = false	
+					end					
+					if knifeType == "Tesla Knife" then
+						handle.Electric["1"].Visible = false
+						coroutine.resume(coroutine.create(function()
+							if tKnife:findFirstChild("Electric") == nil then teslaEffect:clone().Parent = tKnife end
+							for i = 1, 1000 do
+								wait(0.1)
+								if tKnife ~= nil then
+									if tKnife:findFirstChild("Electric") then	
+									tKnife.Electric["1"].Rotation = math.random(0, 360)
+									end
+								end
+							end
+						end))							
+					end				
+					local s = math.random(1, 2)
+					if s == 1 then
+					throw1_sound:Play()		
+					elseif s == 2 then
+					throw2_sound:Play()								
+					end	
+					local tScript = script.clean:clone()
+					tScript.Parent = tKnife
+					tScript.Disabled = false
+					local p = rarm.CFrame.p
+				
+					coroutine.resume(coroutine.create(function()
+					tKnife.airswoosh:Play()	
+					for i = 1, Distance, 0.25*charge/2.5 do
+					wait()	
+					tKnife.CFrame = CFrame.new(Position, p) * CFrame.new(0, 0, i-Distance) * CFrame.fromEulerAnglesXYZ(math.rad(15*i), math.rad(180), math.rad(360))
+					local p = game.Players:GetChildren()
+					for i = 1, #p do
+						if p[i].Character ~= nil then
+							if p[i].Character:findFirstChild("Torso") ~= nil then
+								if (p[i].Character.Torso.Position - tKnife.Position).Magnitude <= 3 then
+								local h = p[i].Character:findFirstChild("Humanoid")
+									if h ~= nil then
+										if h.Parent ~= character and h.Health >= 1 then
+											if knifeType == "Boom Blade" then
+												
+											local s = math.random(1, 3)
+												if s == 1 then
+												tKnife.Hit1:Play()		
+												tKnife.Death1:Play()	
+												elseif s == 2 then
+												tKnife.Hit2:Play()	
+												tKnife.Death2:Play()		
+												elseif s == 3 then
+												tKnife.Hit3:Play()		
+												tKnife.Death3:Play()				
+												end	
+												tagHumanoid(h)
+												local e = Instance.new("Explosion")
+												e.Parent = workspace
+												e.Position = h.Parent.Torso.Position
+												e.BlastPressure = 0
+												e.BlastRadius = 10
+												tKnife.Explode:Play()
+												tKnife.airswoosh:Stop()	
+												local maxDamage = 200 
+												
+												e.Hit:connect(function(hitPart)
+												    local humanoid = hitPart.Parent:FindFirstChild("Humanoid")
+												    if humanoid then
+														if humanoid.Parent ~= character then  
+															if workspace.GameInProgress.Mode.Value == "Double Trouble" or workspace.GameInProgress.Mode.Value == "Sticks and Stones" or workspace.GameInProgress.Mode.Value == "Infected" then if h.Parent:findFirstChild("Role") then if h.Parent:findFirstChild("Role").Value == "Murderer" then return end end end
+															tagHumanoid(humanoid)
+															if workspace.GameInProgress.Mode.Value == "Cold Killer" then									
+															freeze(humanoid.Parent)
+															else	
+															humanoid:TakeDamage(maxDamage)
+															end	        
+														end           
+												    end
+												end)
+											elseif knifeType == "Tesla Knife" then												
+											local s = math.random(1, 3)
+												if s == 1 then
+												tKnife.Hit1:Play()		
+												tKnife.Death1:Play()	
+												elseif s == 2 then
+												tKnife.Hit2:Play()	
+												tKnife.Death2:Play()		
+												elseif s == 3 then
+												tKnife.Hit3:Play()		
+												tKnife.Death3:Play()				
+												end	
+												tagHumanoid(h)
+												tKnife.Zap2:Play()
+												tKnife.airswoosh:Stop()	
+												tKnife.Transparency = 1
+												tesla(tKnife)																								
+											else
+										local s = math.random(1, 3)
+										if workspace.GameInProgress.Mode.Value == "Double Trouble" or workspace.GameInProgress.Mode.Value == "Sticks and Stones" or workspace.GameInProgress.Mode.Value == "Infected" then if h.Parent:findFirstChild("Role") then if h.Parent:findFirstChild("Role").Value == "Murderer" then tKnife.airswoosh:Stop() wait() tKnife:Destroy() return end end end
+										tagHumanoid(h)
+										if workspace.GameInProgress.Mode.Value == "Cold Killer" then									
+										freeze(h.Parent)	
+										else
+											if s == 1 then
+											tKnife.Hit1:Play()		
+											tKnife.Death1:Play()	
+											elseif s == 2 then
+											tKnife.Hit2:Play()	
+											tKnife.Death2:Play()		
+											elseif s == 3 then
+											tKnife.Hit3:Play()		
+											tKnife.Death3:Play()				
+											end	
+											--tKnife.airswoosh:Stop()	
+											h:TakeDamage(1337)
+											checkKnifeEffects(h, tKnife)
+										end
+											
+	
+										end
+											
+											if knifeType ~= "Ghost Knife" then
+												if tKnife ~= nil then
+													tKnife.airswoosh:stop()												
+													if tKnife:findFirstChild("ZapCharge") ~= nil then
+													tKnife:findFirstChild("ZapCharge"):stop()	
+													end
+													wait()
+													tKnife.Parent = nil 
+														return
+													
+												end
+											end							
+								
+								
+									end								
+								end
+							end
+						end
+					end	
+					end
+					end
+					local ran = math.random(1, 2)
+					if ran == 1 then
+					tKnife.Wallhit1:Play()	
+					else
+					tKnife.Wallhit2:Play()		
+					end
+						coroutine.resume(coroutine.create(function()
+						if knifeType == "Boom Blade" and tKnife ~= nil then
+							for i = 1, 15 do
+								wait(1/6)
+								tKnife.Mesh.VertexColor = Vector3.new(1, 0, 0)  
+								--tKnife.Flash.ImageLabel.Visible = true
+								tKnife.Beep:Play()
+								wait(1/6)
+								tKnife.Mesh.VertexColor = Vector3.new(1, 1, 1) 
+								--tKnife.Flash.ImageLabel.Visible = false
+							end
+							for i = 1, 5 do
+								wait(0.5/6)
+								tKnife.Mesh.VertexColor = Vector3.new(1, 0, 0) 
+								--tKnife.Flash.ImageLabel.Visible = true
+								tKnife.Beep:Play()
+								wait(0.5/6)
+								tKnife.Mesh.VertexColor = Vector3.new(1, 1, 1) 
+								--tKnife.Flash.ImageLabel.Visible = false
+							end			
+								local e = Instance.new("Explosion")
+								e.Parent = workspace
+								e.Position = tKnife.Position
+								e.BlastPressure = 0
+								e.BlastRadius = 10
+								tKnife.Explode:Play()
+								tKnife.Transparency = 1
+								local maxDamage = 200
+								
+								e.Hit:connect(function(hitPart)
+								    local humanoid = hitPart.Parent:FindFirstChild("Humanoid")
+								    if humanoid then
+										if humanoid.Parent ~= character then  
+											if workspace.GameInProgress.Mode.Value == "Double Trouble" or workspace.GameInProgress.Mode.Value == "Sticks and Stones" or workspace.GameInProgress.Mode.Value == "Infected" then if humanoid.Parent:findFirstChild("Role") then if humanoid.Parent:findFirstChild("Role").Value == "Murderer" then return end end end
+											tagHumanoid(humanoid)
+											if workspace.GameInProgress.Mode.Value == "Cold Killer" then									
+											freeze(humanoid.Parent)
+											else	
+											humanoid:TakeDamage(maxDamage)
+											end	        
+										end           
+								    end
+								end)													
+								wait()
+								if tKnife ~= nil then		
+								tKnife.Parent = nil		
+								end	
+														
+						elseif knifeType == "Tesla Knife" and tKnife ~= nil then
+							if tKnife.Transparency ~= 1 then													
+							tKnife.ZapCharge:Play()
+							wait(3)
+								if tKnife ~= nil then		
+								tKnife.ZapCharge:stop()
+								end							
+							tesla(tKnife)
+							tKnife.Electric["1"].Visible = false									
+							end										
+						end												
+						wait(15)
+							for i = 0, 1, 0.1 do
+							wait()	
+								if tKnife ~= nil then
+								tKnife.Transparency = i
+								end
+							end	
+							if tKnife ~= nil then		
+							tKnife.Parent = nil		
+							end			
+						end))						
+					if tKnife ~= nil then
+					if tKnife:findFirstChild("airswoosh") ~= nil then
+					tKnife.airswoosh:Stop()
+					tKnife.CFrame = CFrame.new(Position, p) * CFrame.new(0, 0, -0.5) * CFrame.fromEulerAnglesXYZ(math.rad(90), math.rad(180), math.rad(360))
+					end
+					end												
+					end))
+				
+				elseif knifeType == "Laser Knife" then
+					local tKnife = handle:clone()
+					tKnife.Weld:Destroy()
+					tKnife.Parent = workspace
+					tKnife.Anchored = true
+					tKnife.Transparency = 0
+					laser_sound:Play()
+					local s = math.random(1, 4)
+					if s == 1 then
+					noscope_sound:Play()		
+					elseif s == 2 then
+					boom_sound:Play()			
+					elseif s == 3 then
+					horn_sound:Play()	
+					elseif s == 4 then
+					scream_sound:Play()										
+					end						
+					
+					coroutine.resume(coroutine.create(function()
+						for i = 1, 20 do
+						wait()
+							if RayPart and m then
+							RayPart.Transparency = RayPart.Transparency + 0.075
+							m.Scale = m.Scale - Vector3.new(0.15, 0.15, 0.1)
+							m.Offset = m.Offset + Vector3.new(0, 0, 0.3)
+							end
+						end
+					end))					
+					
+					game:GetService("Debris"):AddItem(tKnife, 25)
+			
+					local tScript = script.clean:clone()
+					tScript.Parent = tKnife
+					tScript.Disabled = false					
+					local p = rarm.CFrame.p
+					local ran = math.random(1, 2)
+					if ran == 1 then
+					tKnife.Wallhit1:Play()	
+					else
+					tKnife.Wallhit2:Play()		
+					end
+				 local Hit, Position = game.Workspace:FindPartOnRayWithIgnoreList(Ray, GENERATE_IGNORELIST(RayPart))
+								if Hit then
+								local damage = 1337	
+								local h = Hit.Parent:FindFirstChild("Humanoid")	
+								local h2 = Hit.Parent.Parent:FindFirstChild("Humanoid")	
+								local no = false
+						 		if h then
+									if h.Parent ~= character and h.Health > 0 then
+										if workspace.GameInProgress.Mode.Value == "Double Trouble" or workspace.GameInProgress.Mode.Value == "Sticks and Stones" or workspace.GameInProgress.Mode.Value == "Infected" then if h.Parent:findFirstChild("Role") then if h.Parent:findFirstChild("Role").Value == "Murderer" then no = true end end end
+										tagHumanoid(h)
+										if workspace.GameInProgress.Mode.Value == "Cold Killer" then									
+										freeze(h.Parent)
+										else	
+											if not no then
+											h:TakeDamage(damage)
+											end
+										end	
+										if tKnife ~= nil then		
+										tKnife.Parent = nil		
+										end		
+									--wait(2)
+									--untagHumanoid(h)								
+									end	
+						    	end
+						 		if h2 then
+									if h2.Parent ~= character and h2.Health > 0 then
+										if workspace.GameInProgress.Mode.Value == "Double Trouble" or workspace.GameInProgress.Mode.Value == "Sticks and Stones" or workspace.GameInProgress.Mode.Value == "Infected" then if h2.Parent:findFirstChild("Role") then if h2.Parent:findFirstChild("Role").Value == "Murderer" then no = true end end end
+										tagHumanoid(h2)
+										if workspace.GameInProgress.Mode.Value == "Cold Killer" then									
+										freeze(h2.Parent)
+										else
+											if not no then	
+											h2:TakeDamage(damage)
+											end
+										end		
+										if tKnife ~= nil then		
+										tKnife.Parent = nil		
+										end			
+									--wait(2)
+									--untagHumanoid(h2)		
+									end	
+							    end
+							end				
+					tKnife.CFrame = CFrame.new(Position, p) * CFrame.new(0, 0, -0.5) * CFrame.fromEulerAnglesXYZ(math.rad(90), math.rad(180), math.rad(360))
+					wait()
+					coroutine.resume(coroutine.create(function()						
+					wait(15)
+						for i = 0, 1, 0.1 do
+						wait()	
+							if tKnife ~= nil then
+							tKnife.Transparency = i
+							end
+						end	
+						if tKnife ~= nil then		
+						tKnife.Parent = nil		
+						end			
+					end))							
+				elseif knifeType == "Quickscoper" then
+					local function explode(pos)
+							local e = Instance.new("Explosion")
+							e.Parent = workspace
+							e.Position = pos
+							e.BlastPressure = 0
+							e.BlastRadius = 6.5
+							local maxDamage = 200
+							
+							local part = Instance.new("Part")
+							part.Parent = workspace
+							part.CFrame = CFrame.new(pos)
+							part.Anchored = true
+							part.CanCollide = false
+							part.Transparency = 1
+							
+							local explode2 = Instance.new("Sound", part) 
+							explode2.SoundId = "http://www.roblox.com/asset/?id=130972023"	
+							explode2.Volume = 1		
+							explode2.Name = "Explode2"	
+							
+							local s = script.clean:clone()
+							s.Parent = part
+							s.Disabled = false
+							game:GetService("Debris"):AddItem(part, 1.5)
+							local hitPos = RayPart.CFrame * CFrame.new(0, 0, (Distance/2))--CFrame.new(mouser.Hit.p)	
+							local memes = {178587598, 179012130, 195013311, 217018519, 223540510, 176067516, 113671547, 197079404, 178913323}
+									for i = 1, 5 do		
+									local d = Instance.new("Part")
+									d.BrickColor = BrickColor.new("Bright red")
+									d.Parent = workspace
+									--if createSound then local s = Instance.new("Sound", d) s.SoundId = "http://www.roblox.com/asset/?id=144884872" s.Volume = 1 s:Play() wait() s:Play() createSound = false end
+									--d.Shape = "Custom"
+									d.Transparency = 1
+									d.Size = Vector3.new(1,1,1)
+									d.TopSurface = "Smooth"
+									d.BottomSurface = "Smooth"
+									local b = Instance.new("BillboardGui")
+									b.Parent = d
+									b.Size = UDim2.new(2, 0, 2, 0)
+									b.Enabled = true
+									b.AlwaysOnTop = false
+									b.Adornee = d
+									local img = Instance.new("ImageLabel")
+									img.Parent = b
+									img.Size = UDim2.new(1, 0, 1, 0)
+									img.BackgroundTransparency = 1
+									img.Rotation = math.random(1, 360)
+									img.Image = "http://www.roblox.com/asset/?id=" .. memes[math.random(1, #memes)]
+									game:GetService("Debris"):AddItem(d, 2)
+									local dir = CFrame.new(math.random(-1, 1)*0.25, math.random(-1, 1)*0.25, math.random(-1, 1)*0.25) --* CFrame.Angles(math.rad(-45, 45),math.rad(-45, 45),math.rad(-45, 45))
+									d.Velocity = Vector3.new(math.random(-25, 25), math.random(35, 70), math.random(-25, 25))
+									d.CFrame = CFrame.new(pos)
+									d.CanCollide = false
+									game:GetService("Debris"):AddItem(d, 1)
+									end
+																
+							explode2:Play()
+							e.Hit:connect(function(hitPart)
+							    local humanoid = hitPart.Parent:FindFirstChild("Humanoid")
+							    if humanoid then
+									if humanoid.Parent ~= character then  
+										if workspace.GameInProgress.Mode.Value == "Double Trouble" or workspace.GameInProgress.Mode.Value == "Sticks and Stones" or workspace.GameInProgress.Mode.Value == "Infected" then if humanoid.Parent:findFirstChild("Role") then if humanoid.Parent:findFirstChild("Role").Value == "Murderer" then return end end end
+										tagHumanoid(humanoid)
+										if workspace.GameInProgress.Mode.Value == "Cold Killer" then									
+										freeze(humanoid.Parent)
+										else	
+										humanoid:TakeDamage(maxDamage)
+										end	        
+									end           
+							    end
+							end)											
+					end
+					local tKnife = handle:clone()
+					tKnife.Weld:Destroy()
+					tKnife.Parent = workspace
+					tKnife.Anchored = true
+					tKnife.Transparency = 0
+					shoot:Play()
+						
+					if RayPart then
+					RayPart.BrickColor = BrickColor.new("White")	
+					end
+					
+					coroutine.resume(coroutine.create(function()
+						for i = 1, 20 do
+						wait()
+							if RayPart and m then
+							RayPart.Transparency = RayPart.Transparency + 0.075
+							m.Scale = m.Scale - Vector3.new(0.15, 0.15, 0.1)
+							m.Offset = m.Offset + Vector3.new(0, 0, 0.3)
+							end
+						end
+					end))					
+					
+					game:GetService("Debris"):AddItem(tKnife, 25)
+			
+					local tScript = script.clean:clone()
+					tScript.Parent = tKnife
+					tScript.Disabled = false					
+					local p = rarm.CFrame.p
+				 local Hit, Position = game.Workspace:FindPartOnRayWithIgnoreList(Ray, GENERATE_IGNORELIST(RayPart))
+								if Hit then
+								local damage = 1337	
+								local h = Hit.Parent:FindFirstChild("Humanoid")	
+								local h2 = Hit.Parent.Parent:FindFirstChild("Humanoid")	
+								local no = false
+						 		if h then
+									if h.Parent ~= character and h.Health > 0 then
+										if workspace.GameInProgress.Mode.Value == "Double Trouble" or workspace.GameInProgress.Mode.Value == "Sticks and Stones" or workspace.GameInProgress.Mode.Value == "Infected" then if h.Parent:findFirstChild("Role") then if h.Parent:findFirstChild("Role").Value == "Murderer" then no = true end end end
+										tagHumanoid(h)
+										if workspace.GameInProgress.Mode.Value == "Cold Killer" then									
+										freeze(h.Parent)
+										else	
+											if not no then	
+											h:TakeDamage(damage)
+											explode(Position)
+												local s = math.random(1, 4)
+												if s == 1 then
+												omg:Play()		
+												elseif s == 2 then
+												wow:Play()			
+												elseif s == 3 then
+												airhorns:Play()	
+												elseif s == 4 then
+												wombo:Play()										
+												end	
+											end
+										end	
+										if tKnife ~= nil then		
+										tKnife.Parent = nil		
+										end		
+									--wait(2)
+									--untagHumanoid(h)								
+									end	
+						    	end
+						 		if h2 then
+									if h2.Parent ~= character and h2.Health > 0 then
+										if workspace.GameInProgress.Mode.Value == "Double Trouble" or workspace.GameInProgress.Mode.Value == "Sticks and Stones" or workspace.GameInProgress.Mode.Value == "Infected" then if h2.Parent:findFirstChild("Role") then if h2.Parent:findFirstChild("Role").Value == "Murderer" then no = true end end end
+										tagHumanoid(h2)
+										if workspace.GameInProgress.Mode.Value == "Cold Killer" then									
+										freeze(h2.Parent)
+										else
+											if not no then		
+											h2:TakeDamage(damage)
+											explode(Position)
+												local s = math.random(1, 4)
+												if s == 1 then
+												omg:Play()		
+												elseif s == 2 then
+												wow:Play()			
+												elseif s == 3 then
+												airhorns:Play()	
+												elseif s == 4 then
+												wombo:Play()										
+												end	
+											end
+										end		
+										if tKnife ~= nil then		
+										tKnife.Parent = nil		
+										end			
+									--wait(2)
+									--untagHumanoid(h2)		
+									end	
+							    end
+							end				
+					tKnife.CFrame = CFrame.new(Position, p) * CFrame.new(0, 0, -0.5) * CFrame.fromEulerAnglesXYZ(math.rad(90), math.rad(180), math.rad(360))
+					tKnife.HitMarker:Play()
+					wait()
+					coroutine.resume(coroutine.create(function()						
+					wait(15)
+						for i = 0, 1, 0.1 do
+						wait()	
+							if tKnife ~= nil then
+							tKnife.Transparency = i
+							end
+						end	
+						if tKnife ~= nil then		
+						tKnife.Parent = nil		
+						end			
+					end))							
+							
+														
+				end				
+		end
+		
+		rany = math.random(1, 4)
+		if rany == 1 then
+		slash1_sound:Play()	
+		elseif rany == 2 then
+		slash2_sound:Play()	
+		elseif rany == 3 then
+		slash3_sound:Play()	
+		elseif rany == 4 then
+		slash4_sound:Play()				
+		end
+
+		coroutine.resume(coroutine.create(function()
+				local hits = {}
+				
+				local start = tick()
+				local actv = true
+				
+				local function isHitted(obj)
+					for i = 1, #hits do
+						if obj:IsDescendantOf(hits[i]) then
+							return true
+						end
+					end
+					return false
+				end
+				
+				local function hitp(hit)
+					if isHitted(hit) then return end
+					local h = hit.Parent:findFirstChild("Humanoid")
+					if h == nil then
+						h = hit.Parent.Parent:findFirstChild("Humanoid")
+					end
+					if h == nil then return end
+					hits[#hits + 1] = h.Parent
+					HIT_HANDLE(hit)
+				end
+				
+				local con = {
+					handle.Touched:connect(hitp),
+					--rarm.Touched:connect(hitp),
+				}
+				while tick() - start <= Settings.Attack_speed do wait() end
+				con[1]:disconnect()
+				if throwing then
+				throwequip = true
+				equip_sound:Play()
+				throw_perform = 0
+				anim_equip = 1
+				last_action = tick()
+				
+				last_c = tick()
+				click_start = tick()
+			
+				throw_perform = 0
+				throwing = false
+				charging = false
+				charge = 0
+				charge_perform = 0
+				actv = false
+				handle.Transparency = 0
+					if camera:findFirstChild("WeaponAnimation") then
+						if camera.WeaponAnimation:findFirstChild("WeaponObject") then
+						camera.WeaponAnimation:findFirstChild("WeaponObject").Transparency = 0	
+						end
+					end	
+				throwequip = false		
+				end		
+			end))		
+		end)
+	local inspecting = false
+	mouse.KeyDown:connect(function(key)
+		if key == "e" then	
+			if knifePerk == "Shadow Cloak" and not cloakDB then		
+			cloak()
+			end
+		elseif key == "f" then	
+			if not inspecting then
+			inspect_perform = 0
+			end
+		if tick() - inspect_perform <= Settings.Inspect_speed then return end
+		if charging or charge >= 40 then return end
+		inspecting = true
+		inspect_perform = tick()
+		last_action = tick()		
+		end
+	end)
+	
+	
+	local function checkFirstPerson()
+		-- KNIFE EFFECTS
+		if knifeType == "Tesla Knife" then
+			--[[if camera:findFirstChild("WeaponAnimation") ~= nil then 
+				if handle then
+					if handle:findFirstChild("Electric") then
+					handle.Electric["1"].Visible = false	
+					end
+				end				
+				if camera.WeaponAnimation:findFirstChild("WeaponObject") ~= nil then
+					if camera.WeaponAnimation.WeaponObject:findFirstChild("Electric") == nil then
+					teslaEffect:clone().Parent = camera.WeaponAnimation:findFirstChild("WeaponObject")	
+					teslaEffect["1"].Visible = true
+					else
+					camera.WeaponAnimation.WeaponObject.Electric[1].Visible = true
+					camera.WeaponAnimation.WeaponObject.Electric[1].Rotation = math.random(1, 360)
+					end
+				end
+			else  ]]
+				if handle ~= nil then
+					if handle:findFirstChild("Electric") then
+						if not cloaked then
+						handle.Electric["1"].Visible = true
+						else
+						handle.Electric["1"].Visible = false	
+						end	
+					else
+					teslaEffect:clone().Parent = handle
+					teslaEffect["1"].Visible = true												
+					end
+				end
+			--end	
+		end
+		
+		if knifeType == "HOT! Knife" then
+			--if camera:findFirstChild("WeaponAnimation") ~= nil then 
+			--else
+				if handle ~= nil then
+					if handle:findFirstChild("Fire") then
+						if not cloaked then
+						handle.Fire.Enabled = true
+						else
+						handle.Fire.Enabled = false	
+						end
+					else
+					fireEffect:clone().Parent = handle
+					fireEffect.Enabled = true												
+					end
+				--end
+			end	
+		end		
+		
+		-- CLOAKING EFFECT
+		if camera:findFirstChild("WeaponAnimation") ~= nil then 
+			if camera.WeaponAnimation:findFirstChild("Larm") ~= nil then
+				if not cloaked then
+				camera.WeaponAnimation:findFirstChild("Larm").Transparency = 0
+				else
+				camera.WeaponAnimation:findFirstChild("Larm").Transparency = 0.5	
+				end
+			end	
+			if camera.WeaponAnimation:findFirstChild("Rarm") ~= nil then
+				if not cloaked then
+				camera.WeaponAnimation:findFirstChild("Rarm").Transparency = 0
+				else
+				camera.WeaponAnimation:findFirstChild("Rarm").Transparency = 0.5						
+				end
+			end										
+			if camera.WeaponAnimation:findFirstChild("WeaponObject") ~= nil then
+				if not skinLoad then
+				skinLoad = true
+				camera.WeaponAnimation:findFirstChild("WeaponObject").Mesh.TextureId = handle.Mesh.TextureId
+				end
+				if not cloaked then	
+				camera.WeaponAnimation:findFirstChild("WeaponObject").Transparency = 0
+				else
+				camera.WeaponAnimation:findFirstChild("WeaponObject").Transparency = 0.5						
+				end
+			end	
+		end	
+	end
+	local conn = rs.RenderStepped:connect(function()
+		if not running then return end
+		local delta = tick() - last_c
+		last_c = tick()		
+		if anim_equip > 0 or throwequip then
+			anim_equip = math.max(0, anim_equip - (delta / Settings.Equip_time))
+			Animate("Equip", 1 - anim_equip)
+			checkFirstPerson()
+		elseif tick() - charge_perform <= Settings.Charge_speed and charging then
+			Animate("ThrowCharging", (tick() - charge_perform) / Settings.Charge_speed)	
+			pl_mouse.Icon = "http://www.roblox.com/asset/?id=117431027"	
+			inspecting = false	
+			checkFirstPerson()						
+		elseif throwing then
+			Animate("Throw", (tick() - throw_perform) / Settings.Throw_speed)	
+			pl_mouse.Icon = "http://www.roblox.com/asset/?id=117431027"	
+			inspecting = false																		
+		elseif tick() - attack_perform <= Settings.Attack_speed and not throwing then
+			Animate("Slash" .. rany, (tick() - attack_perform) / Settings.Attack_speed)
+			inspecting = false	
+			checkFirstPerson()									
+		elseif tick() - inspect_perform <= Settings.Inspect_speed and inspecting then
+			Animate("Inspect", (tick() - inspect_perform) / Settings.Inspect_speed)
+			pl_mouse.Icon = "http://www.roblox.com/asset/?id=35446049"	
+			checkFirstPerson()															
+		else
+			if charge >= 50 then
+			Animate("DefaultCharged", 0)
+			checkFirstPerson()	
+				pl_mouse.Icon = "http://www.roblox.com/asset/?id=117431027"	
+			else
+			checkFirstPerson()				
+			Animate("Default", 0)
+			pl_mouse.Icon = "http://www.roblox.com/asset/?id=117431027"		
+			end
+		end
+		
+	end)
+	tool.Deselected:connect(function() 
+	running = false 
+	conn:disconnect() 
+	end)
+	humanoid.Died:connect(function()
+	pl_mouse.Icon = "rbxasset://textures\\ArrowCursor.png"		
+	running = false 	
+	conn:disconnect() 
+	wait()
+		if camera:findFirstChild("WeaponAnimation") then
+		camera:findFirstChild("WeaponAnimation").Parent = nil	
+		end 
+		wait()
+		if camera:findFirstChild("WeaponAnimation") then
+		camera:findFirstChild("WeaponAnimation").Parent = nil	
+		end 
+		wait()
+		if camera:findFirstChild("WeaponAnimation") then
+		camera:findFirstChild("WeaponAnimation").Parent = nil	
+		end 			
+	end)	
+end)
+
+tool.Deselected:connect(function(mouse)
+	if humanoid then
+	unCloak()		
+	charge = 0
+	charging = false	
+	pl_mouse.Icon = "rbxasset://textures\\ArrowCursor.png"	
+		if workspace.GameInProgress.Mode.Value ~= "Infected" then
+		humanoid.WalkSpeed = 16
+		else
+		humanoid.WalkSpeed = 13	
+		end	
+	end
+end)
+
+
